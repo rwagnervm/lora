@@ -71,8 +71,8 @@ void LoraSendAck(byte sender, byte incomingMsgId) {
 void LoraReceive() {
   // Leu um pacote, vamos decodificar?
   byte sender = LoRa.read();            // Endereco do remetente
-  byte incomingMsgId = LoRa.read();     // Mensagem
-  bool ack = LoRa.read();     // Mensagem
+  byte incomingMsgId = LoRa.read();     // Id da Mensagem
+  bool ack = LoRa.read();
 
   if (ack) {
     if (lastIdMsg == incomingMsgId) {
@@ -91,12 +91,13 @@ void LoraReceive() {
 
 
   } else {
+    byte canal = LoRa.read();
     String incoming = "";
     while (LoRa.available()) {
       incoming += (char)LoRa.read();
     }
 
-    String topic = "lora/" + String(incomingMsgId) + "/receive";
+    String topic = "lora/" + String(sender) + "/" + canal + "/receive";
     client.publish(topic.c_str() , incoming.c_str());
 
     LoraSendAck(sender, incomingMsgId);
@@ -116,7 +117,7 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
 }
 
 
-void reconnectMqtt() {
+void reconnect() {
   reconnectWiFi();
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
