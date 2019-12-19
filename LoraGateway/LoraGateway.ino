@@ -69,18 +69,20 @@ void LoraSendAck(byte sender, byte incomingMsgId) {
 
 // Funcao para receber mensagem
 void LoraReceive() {
+  Serial.println("Mensagem Lora ");
   // Leu um pacote, vamos decodificar?
   byte sender = LoRa.read();            // Endereco do remetente
   byte incomingMsgId = LoRa.read();     // Id da Mensagem
   bool ack = LoRa.read();
 
   if (ack) {
+    Serial.println("ACK ");
     if (lastIdMsg == incomingMsgId) {
       lastMsgConfirmed = true;
       retry = 0;
 
       //Publicar no tópico
-      String topic = "lora/" + String(incomingMsgId) + "/state";
+      String topic = "lora/" + String(sender) + "/state";
       client.publish(topic.c_str() , lastMsg.c_str());
 
       Serial.print("ACK from ");
@@ -91,6 +93,7 @@ void LoraReceive() {
 
 
   } else {
+    Serial.println("Mensagem Lora ");
     byte canal = LoRa.read();
     String incoming = "";
     while (LoRa.available()) {

@@ -13,7 +13,7 @@
 
 #define localAddress 0xAA     // Endereco deste dispositivo LoRa
 
-DHT dht(16, DHT22);
+DHT dht(13, DHT22);
 
 long lastSendTime = 0;        // TimeStamp da ultima mensagem enviada
 String lastMsg;
@@ -43,8 +43,8 @@ void LoraSendMessage(String outgoing, byte canal, byte retry = 0) {
     LoRa.beginPacket();                   // Inicia o pacote da mensagem
     LoRa.write(localAddress);             // Adiciona o endereco do remetente
     LoRa.write(lastIdMsg);              // Contador da mensagem
-    LoRa.write(canal);              // Contador da mensagem
     LoRa.write(false);                    // ACK
+    LoRa.write(canal);              // Contador da mensagem
     LoRa.print(outgoing);                 // Vetor da mensagem
     LoRa.endPacket();                     // Finaliza o pacote e envia
   }
@@ -117,6 +117,7 @@ void loop() {
   // verifica se temos o intervalo de tempo para enviar uma mensagem
   if (millis() - lastSendTime > interval) {
     //String mensagem = "Hellora World Device " + String(localAddress)  ;    // Definicao da mensagem
+    Serial.println("Enviando temperatura!");
     LoraSendMessage(String(dht.readTemperature()), 1);
     lastSendTime = millis();            // Timestamp da ultima mensagem
   }
@@ -125,6 +126,7 @@ void loop() {
     LoraSendMessage(lastMsg, retry++);
     lastSendTime = millis();
     if (retry == 6)
+      retry=0;
       lastMsgConfirmed = true;
 
   }
