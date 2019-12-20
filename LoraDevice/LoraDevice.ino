@@ -80,7 +80,7 @@ void LoraReceive() {
       incoming += (char)LoRa.read();
     }
     //Trabalhar a msg
-    if (incomingMsgId % 2)
+    if (incoming == "1")
       digitalWrite(BUILTIN_LED, HIGH);
     else
       digitalWrite(BUILTIN_LED, LOW);
