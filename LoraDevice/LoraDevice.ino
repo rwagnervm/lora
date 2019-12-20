@@ -122,13 +122,13 @@ void loop() {
     lastSendTime = millis();            // Timestamp da ultima mensagem
   }
 
-  if (!lastMsgConfirmed && (retry < 6) && (millis() - lastSendTime > 500)) {
+  if (!lastMsgConfirmed && (retry < 6) && (millis() - lastSendTime > (random(400) + 100))) {
     LoraSendMessage(lastMsg, retry++);
     lastSendTime = millis();
-    if (retry == 6)
+    if (retry == 6) {
       retry=0;
       lastMsgConfirmed = true;
-
+    }
   }
 
 
