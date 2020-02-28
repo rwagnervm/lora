@@ -2,6 +2,7 @@
 #include <LoRa.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <RCSwitch.h>
 
 #define LORA_SCK     5
 #define LORA_MISO    19
@@ -9,6 +10,8 @@
 #define LORA_SS      18
 #define LORA_RST     14
 #define LORA_DI0     26
+
+#define RF_RECEIVER_PIN  17
 
 const char* ssid = "WNET";
 const char* password =  "p@ulinh@p3drinh0";
@@ -19,6 +22,7 @@ const char* mqttPassword = "serprofla";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+RCSwitch mySwitch = RCSwitch();
 
 long lastSendTime = 0;        // TimeStamp da ultima mensagem enviada
 String lastMsg;
@@ -70,7 +74,6 @@ void LoraSendAck(byte sender, byte incomingMsgId) {
 // Funcao para receber mensagem
 void LoraReceive() {
   Serial.println("Mensagem Lora ");
-  // Leu um pacote, vamos decodificar?
   byte sender = LoRa.read();            // Endereco do remetente
   byte incomingMsgId = LoRa.read();     // Id da Mensagem
   bool ack = LoRa.read();
@@ -106,6 +109,14 @@ void LoraReceive() {
     LoraSendAck(sender, incomingMsgId);
     Serial.println("Mensagem recebida: " + incoming);
   }
+}
+
+void RFReceive() {
+  String topic = "rf/receive";
+  char received[50];
+  String received_str = String(mySwitch.getReceivedValue());
+  received_str.toCharArray(received, received_str.length() + 1);
+  client.publish(topic.c_str() , received);
 }
 
 void mqtt_callback(char* topic, byte* payload, unsigned int length) {
@@ -166,9 +177,12 @@ void setup() {
 
   client.setServer(mqttServer, mqttPort);
   client.setCallback(mqtt_callback);
+
+  mySwitch.enableReceive(digitalPinToInterrupt(RF_RECEIVER_PIN));
 }
 
 void loop() {
+  reconnect();
   /*
     if (millis() - lastSendTime > interval) {
       String mensagem = "Hellora World Gateway!";    // Definicao da mensagem
@@ -185,8 +199,13 @@ void loop() {
     }
   }
 
-  reconnect();
-
   if (LoRa.parsePacket())
     LoraReceive();
+
+  if (mySwitch.available()) {
+    RFReceive();
+    //output(mySwitch.getReceivedValue(), mySwitch.getReceivedBitlength(), mySwitch.getReceivedDelay(), mySwitch.getReceivedRawdata(),mySwitch.getReceivedProtocol());
+    mySwitch.resetAvailable();
+  }
+
 }
